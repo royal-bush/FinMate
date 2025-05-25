@@ -5,39 +5,34 @@ name: CI Pipeline
 on: [push, pull_request]
 
 jobs:
-    lint-and-test:
-        runs-on: ubunto-latest
+  lint-and-test:
+    runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-        services:
-            postgres:
-                image: postgres:14
-                env:
-                    POSTGRES_PASSWORD: password
-                
-                ports:
-                    - 5432:5432
-                
-                options: >-
-                    --health-cmd pg_isready
-                    --health-interval 10s
-                    --health-timeout 5s
-                    --health-retries 5
-        
-        steps:
-            - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v3
 
-            # Backend: Python setup
-            - uses: actions/setup-python@v4
-              with:
-                python-version: '3.9'
-            - run: pip install -r backend/requirements.txt
-            - run: pytest backend/tests
+      # Backend: Python setup
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - run: pip install -r backend/requirements.txt
+      - run: pytest backend/tests
 
-
-            # Frontend: Node setup
-            - uses: actions/setup-node@v3
-              with:
-                node-verion: '16'
-            - run: cd frontend && npm ci && npm run lint
-            
+      # Frontend: Node setup
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      - run: cd frontend && npm ci && npm run lint
